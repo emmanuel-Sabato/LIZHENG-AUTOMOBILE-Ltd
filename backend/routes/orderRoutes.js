@@ -102,4 +102,41 @@ router.put('/:id/status', protect, async (req, res) => {
     }
 });
 
+// @desc    Update customer status
+// @route   PUT /api/orders/customers/:id/status
+// @access  Private/Admin
+router.put('/customers/:id/status', protect, async (req, res) => {
+    try {
+        const customer = await Customer.findById(req.params.id);
+        if (customer) {
+            customer.status = req.body.status || customer.status;
+            const updatedCustomer = await customer.save();
+            res.json(updatedCustomer);
+        } else {
+            res.status(404).json({ message: 'Customer not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Delete customer
+// @route   DELETE /api/orders/customers/:id
+// @access  Private/Admin
+router.delete('/customers/:id', protect, async (req, res) => {
+    try {
+        const customer = await Customer.findById(req.params.id);
+        if (customer) {
+            // Optional: delete associated orders
+            await Order.deleteMany({ customer: customer._id });
+            await customer.deleteOne();
+            res.json({ message: 'Customer and associated inquiries removed successfully' });
+        } else {
+            res.status(404).json({ message: 'Customer not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

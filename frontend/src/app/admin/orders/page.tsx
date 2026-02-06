@@ -136,11 +136,11 @@ export default function OrdersPage() {
                 // Map backend data to local Order interface
                 const mappedOrders = data.map((item: any) => ({
                     id: item._id,
-                    customerName: item.customer.name,
-                    email: item.customer.email,
-                    phone: item.customer.phone,
-                    carInterested: `${item.car.brand} ${item.car.name}`,
-                    message: `Customer preferred to be contacted via ${item.customer.method} in ${item.customer.language}. Location: ${item.customer.location}`,
+                    customerName: item.customer?.name || "Unknown Customer",
+                    email: item.customer?.email || "N/A",
+                    phone: item.customer?.phone || "N/A",
+                    carInterested: item.car ? `${item.car.brand} ${item.car.name}` : "Vehicle Unavailable",
+                    message: `Customer preferred to be contacted via ${item.customer?.method || 'N/A'} in ${item.customer?.language || 'N/A'}. Location: ${item.customer?.location || 'N/A'}`,
                     status: item.status,
                     date: new Date(item.createdAt).toLocaleString(),
                     source: item.source || "website",

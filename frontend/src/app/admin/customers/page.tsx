@@ -12,6 +12,9 @@ import {
     MoreVertical,
     ExternalLink,
     MapPin,
+    Download,
+    Trash2,
+    CheckCircle,
 } from "lucide-react";
 import API_BASE_URL from "@/config/api";
 
@@ -23,8 +26,9 @@ interface Customer {
     location: string;
     totalInquiries: number;
     lastContact: string;
-    status: "active" | "potential" | "converted";
+    status: "Active" | "Potential" | "Converted";
     joinedDate: string;
+    _id: string; // Original ID for API calls
 }
 
 const mockCustomers: Customer[] = [
@@ -97,9 +101,9 @@ const mockCustomers: Customer[] = [
 ];
 
 const statusConfig = {
-    active: { label: "Active", color: "bg-blue-500/10 text-blue-500" },
-    potential: { label: "Potential", color: "bg-amber-500/10 text-amber-500" },
-    converted: { label: "Converted", color: "bg-green-500/10 text-green-500" },
+    Active: { label: "Active", color: "bg-blue-500/10 text-blue-500" },
+    Potential: { label: "Potential", color: "bg-amber-500/10 text-amber-500" },
+    Converted: { label: "Converted", color: "bg-green-500/10 text-green-500" },
 };
 
 export default function CustomersPage() {
@@ -120,13 +124,14 @@ export default function CustomersPage() {
                 const data = await response.json();
                 const mappedCustomers = data.map((c: any) => ({
                     id: c._id.substring(c._id.length - 8).toUpperCase(),
+                    _id: c._id,
                     name: c.name,
                     email: c.email,
                     phone: c.phone,
                     location: c.location,
                     totalInquiries: c.totalInquiries || 0,
                     lastContact: new Date(c.lastContact || c.updatedAt).toLocaleDateString(),
-                    status: (c.totalInquiries > 2 ? "active" : c.totalInquiries > 0 ? "potential" : "converted") as any,
+                    status: c.status || "Potential",
                     joinedDate: new Date(c.createdAt).toLocaleDateString(),
                 }));
                 setCustomers(mappedCustomers);
@@ -136,6 +141,65 @@ export default function CustomersPage() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleUpdateStatus = async (customerId: string, newStatus: string) => {
+        try {
+            const token = localStorage.getItem("adminToken");
+            const response = await fetch(`${API_BASE_URL}/api/orders/customers/${customerId}/status`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            if (response.ok) {
+                fetchCustomers();
+            }
+        } catch (error) {
+            console.error("Error updating customer status:", error);
+        }
+    };
+
+    const handleDeleteCustomer = async (customerId: string) => {
+        if (!confirm("Are you sure you want to delete this customer? This will also remove all their inquiries.")) return;
+        try {
+            const token = localStorage.getItem("adminToken");
+            const response = await fetch(`${API_BASE_URL}/api/orders/customers/${customerId}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.ok) {
+                fetchCustomers();
+            }
+        } catch (error) {
+            console.error("Error deleting customer:", error);
+        }
+    };
+
+    const exportToCSV = () => {
+        const headers = ["ID", "Name", "Email", "Phone", "Location", "Inquiries", "Last Contact", "Status", "Joined"];
+        const rows = filteredCustomers.map(c => [
+            c.id, c.name, c.email, c.phone, c.location, c.totalInquiries, c.lastContact, c.status, c.joinedDate
+        ]);
+
+        const csvContent = [
+            headers.join(","),
+            ...rows.map(row => row.join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `customers_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     useEffect(() => {
@@ -187,7 +251,7 @@ export default function CustomersPage() {
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-secondary">
-                                {customers.filter((c) => c.status === "converted").length}
+                                {customers.filter((c) => c.status === "Converted").length}
                             </p>
                             <p className="text-sm text-muted">Converted</p>
                         </div>
@@ -207,8 +271,8 @@ export default function CustomersPage() {
                         />
                     </div>
 
-                    <div className="flex items-center gap-1 p-1 bg-surface rounded-xl">
-                        {["all", "active", "potential", "converted"].map((status) => (
+                    <div className="flex items-center gap-1 p-1 bg-surface rounded-xl overflow-x-auto">
+                        {["all", "Potential", "Active", "Converted"].map((status) => (
                             <button
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
@@ -221,6 +285,14 @@ export default function CustomersPage() {
                             </button>
                         ))}
                     </div>
+
+                    <button
+                        onClick={exportToCSV}
+                        className="flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent rounded-xl hover:bg-accent/20 transition-all font-medium text-sm"
+                    >
+                        <Download size={18} />
+                        Export
+                    </button>
                 </div>
 
                 {/* Customer Grid */}
@@ -245,9 +317,11 @@ export default function CustomersPage() {
 
                             {/* Info */}
                             <div className="space-y-2 mb-4">
-                                <div className="flex items-center gap-2 text-sm">
+                                <div className="flex items-center gap-2 text-sm group">
                                     <Mail size={14} className="text-muted" />
-                                    <span className="text-muted truncate">{customer.email}</span>
+                                    <a href={`mailto:${customer.email}`} className="text-muted truncate hover:text-accent transition-colors">
+                                        {customer.email}
+                                    </a>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm">
                                     <Phone size={14} className="text-muted" />
@@ -282,15 +356,34 @@ export default function CustomersPage() {
                                 >
                                     WhatsApp
                                 </a>
-                                <a
-                                    href={`mailto:${customer.email}`}
-                                    className="flex-1 py-2 px-3 rounded-lg bg-blue-500/10 text-blue-500 text-sm font-medium text-center hover:bg-blue-500/20 transition-colors"
-                                >
-                                    Email
-                                </a>
-                                <button className="py-2 px-3 rounded-lg bg-white/5 text-muted text-sm hover:bg-white/10 transition-colors">
-                                    <MoreVertical size={16} />
-                                </button>
+                                <div className="relative group/menu">
+                                    <button className="py-2 px-3 rounded-lg bg-white/5 text-muted text-sm hover:bg-white/10 transition-colors">
+                                        <MoreVertical size={16} />
+                                    </button>
+
+                                    {/* Action Dropdown */}
+                                    <div className="absolute right-0 bottom-full mb-2 w-48 bg-surface border border-white/10 rounded-xl shadow-2xl opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all z-10 p-1">
+                                        <p className="text-[10px] font-bold text-accent uppercase tracking-wider px-3 py-2">Change Status</p>
+                                        {(['Potential', 'Active', 'Converted'] as const).map(status => (
+                                            <button
+                                                key={status}
+                                                onClick={() => handleUpdateStatus(customer._id, status)}
+                                                className="w-full text-left px-3 py-2 text-xs text-secondary hover:bg-white/5 rounded-lg flex items-center justify-between"
+                                            >
+                                                {status}
+                                                {customer.status === status && <CheckCircle size={12} className="text-accent" />}
+                                            </button>
+                                        ))}
+                                        <div className="h-px bg-white/5 my-1" />
+                                        <button
+                                            onClick={() => handleDeleteCustomer(customer._id)}
+                                            className="w-full text-left px-3 py-2 text-xs text-red-400 hover:bg-red-400/10 rounded-lg flex items-center gap-2"
+                                        >
+                                            <Trash2 size={12} />
+                                            Delete User
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ))}

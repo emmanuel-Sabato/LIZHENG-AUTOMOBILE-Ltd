@@ -30,6 +30,11 @@ const customerSchema = new mongoose.Schema({
         type: String,
         required: true,
         enum: ['Email', 'Call', 'Whatsapp']
+    },
+    status: {
+        type: String,
+        default: 'Potential',
+        enum: ['Potential', 'Active', 'Converted']
     }
 }, {
     timestamps: true

@@ -20,12 +20,7 @@ import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import API_BASE_URL from "@/config/api";
 
-const categoryData = [
-    { label: "SUV", value: 40, color: "#D4AF37" },
-    { label: "Sedan", value: 25, color: "#22C55E" },
-    { label: "Truck", value: 20, color: "#3B82F6" },
-    { label: "Electric", value: 15, color: "#8B5CF6" },
-];
+// Category data will be calculated dynamically from the fetched cars
 
 export default function AdminDashboard() {
     const { token } = useAuth();
@@ -64,8 +59,24 @@ export default function AdminDashboard() {
                 const activities = ordersData.slice(0, 4).map((order: any) => ({
                     id: order._id,
                     type: "inquiry",
-                    message: `New inquiry for ${order.car?.brand} ${order.car?.name}`,
+                    message: order.car
+                        ? `New inquiry for ${order.car.brand} ${order.car.name}`
+                        : `New inquiry for a recently removed vehicle`,
                     time: new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }));
+
+                // Calculate category distribution
+                const categories = carsData.reduce((acc: any, car: any) => {
+                    acc[car.category] = (acc[car.category] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const total = carsData.length;
+                const colors = ["#D4AF37", "#22C55E", "#3B82F6", "#8B5CF6", "#F59E0B", "#EF4444"];
+                const dynamicCategoryData = Object.keys(categories).map((cat, idx) => ({
+                    label: cat,
+                    value: Math.round((categories[cat] / total) * 100),
+                    color: colors[idx % colors.length]
                 }));
 
                 setDashboardData({
@@ -74,11 +85,12 @@ export default function AdminDashboard() {
                     totalCustomers: customersData.length,
                     totalViews: analyticsData.totalViews || 0,
                     recentActivities: activities,
-                    topCars: carsData.slice(0, 4),
+                    topCars: carsData.sort((a: any, b: any) => (b.views || 0) - (a.views || 0)).slice(0, 4),
                     revenueData: analyticsData.viewsPerDay?.map((day: any) => ({
                         label: day._id.split('-').slice(2).join('/'),
                         value: day.count
-                    })) || []
+                    })) || [],
+                    categoryData: dynamicCategoryData
                 });
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
@@ -101,8 +113,7 @@ export default function AdminDashboard() {
         );
     }
 
-    const { totalCars, totalOrders, totalCustomers, totalViews, recentActivities, topCars, revenueData } = dashboardData;
-    const carViews = [87, 62, 45, 38]; // Still static for now as we don't have per-car stats yet
+    const { totalCars, totalOrders, totalCustomers, totalViews, recentActivities, topCars, revenueData, categoryData } = dashboardData;
 
     return (
         <div className="min-h-screen bg-primary">
@@ -167,14 +178,14 @@ export default function AdminDashboard() {
                     <ChartCard title="Vehicle Categories" subtitle="Stock distribution">
                         <div className="flex flex-col items-center">
                             <SimpleDonutChart
-                                data={categoryData}
+                                data={categoryData || []}
                                 size={160}
-                                centerValue={`${cars.length}`}
+                                centerValue={`${totalCars}`}
                                 centerLabel="Total Cars"
                             />
                             {/* Legend */}
                             <div className="grid grid-cols-2 gap-3 mt-6 w-full">
-                                {categoryData.map((item, idx) => (
+                                {categoryData?.map((item: any, idx: number) => (
                                     <div key={idx} className="flex items-center gap-2">
                                         <div
                                             className="w-3 h-3 rounded-full"
@@ -245,7 +256,7 @@ export default function AdminDashboard() {
                         <div className="space-y-4">
                             {topCars.map((car, idx) => (
                                 <div
-                                    key={car.id}
+                                    key={car._id}
                                     className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
                                 >
                                     {/* Rank */}
@@ -276,7 +287,7 @@ export default function AdminDashboard() {
                                     <div className="text-right">
                                         <p className="text-sm font-bold text-accent">{car.price}</p>
                                         <p className="text-xs text-muted flex items-center gap-1 justify-end">
-                                            <Eye size={10} /> {carViews[idx]} views
+                                            <Eye size={10} /> {car.views || 0} views
                                         </p>
                                     </div>
                                 </div>

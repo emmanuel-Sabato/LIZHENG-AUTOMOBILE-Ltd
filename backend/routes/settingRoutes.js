@@ -118,4 +118,35 @@ router.delete('/slideshow', protect, async (req, res) => {
     }
 });
 
+// @desc    Update general site settings
+// @route   PUT /api/settings
+// @access  Private/Admin
+router.put('/', protect, async (req, res) => {
+    try {
+        let settings = await Setting.findOne();
+        if (!settings) settings = new Setting();
+
+        // Update fields provided in req.body
+        const updateFields = [
+            'dealershipName', 'tagline', 'description', 'currency',
+            'hoursWeekdays', 'hoursSaturday', 'whatsappNumber',
+            'phoneNumber', 'emailAddress', 'address',
+            'facebookUrl', 'instagramUrl', 'linkedinUrl', 'twitterUrl'
+        ];
+
+        updateFields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                settings[field] = req.body[field];
+            }
+        });
+
+        settings.updatedAt = Date.now();
+        await settings.save();
+
+        res.json(settings);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

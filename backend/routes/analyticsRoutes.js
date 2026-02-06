@@ -64,6 +64,23 @@ router.get('/stats', protect, async (req, res) => {
             { $sort: { _id: 1 } }
         ]);
 
+        // 5. Top Viewed Cars with Inquiries
+        const Car = require('../models/Car');
+        const Order = require('../models/Order');
+
+        const topCarsRaw = await Car.find({})
+            .sort({ views: -1 })
+            .limit(5)
+            .select('name brand model views price images');
+
+        const topCars = await Promise.all(topCarsRaw.map(async (car) => {
+            const inquiries = await Order.countDocuments({ car: car._id });
+            return {
+                ...car._doc,
+                inquiries
+            };
+        }));
+
         res.json({
             totalViews,
             uniqueVisitors,
@@ -71,7 +88,8 @@ router.get('/stats', protect, async (req, res) => {
                 acc[curr._id] = curr.count;
                 return acc;
             }, {}),
-            viewsPerDay
+            viewsPerDay,
+            topCars
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -76,10 +76,8 @@ export default function AnalyticsPage() {
         );
     }
 
-    const topViewedCars = cars.slice(0, 5).map((car, idx) => ({
+    const topViewedCars = (analyticsData?.topCars || []).map((car: any, idx: number) => ({
         ...car,
-        views: Math.floor(Math.random() * 500) + 100, // Still random for now
-        inquiries: Math.floor(Math.random() * 30) + 5,
         rank: idx + 1,
     }));
 
@@ -180,7 +178,7 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="space-y-4">
                             {topViewedCars.map((car: any) => (
-                                <div key={car.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5">
+                                <div key={car._id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5">
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${car.rank === 1 ? "bg-accent text-primary" :
                                         car.rank === 2 ? "bg-gray-400 text-primary" :
                                             car.rank === 3 ? "bg-amber-700 text-white" :

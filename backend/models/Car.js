@@ -68,6 +68,10 @@ const carSchema = new mongoose.Schema({
     averageRating: {
         type: Number,
         default: 0
+    },
+    views: {
+        type: Number,
+        default: 0
     }
 }, {
     timestamps: true
