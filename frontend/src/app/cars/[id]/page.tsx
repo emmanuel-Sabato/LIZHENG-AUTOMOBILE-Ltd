@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { cars } from "@/data/cars";
 import {
     Calendar,
     Gauge,
@@ -9,18 +8,48 @@ import {
     MessageCircle,
     ChevronLeft,
     CheckCircle2,
-    Info
+    Info,
+    Loader2,
+    Star
 } from "lucide-react";
+import { getOptimizedImageUrl } from "@/utils/cloudinary";
+import TalkToUsForm from "@/components/TalkToUsForm";
+import CarRating from "@/components/CarRating";
 
-export async function generateStaticParams() {
-    return cars.map((car) => ({
-        id: car.id,
-    }));
+interface Car {
+    _id: string;
+    name: string;
+    brand: string;
+    model: string;
+    year: number;
+    price: string;
+    transmission: string;
+    fuelType: string;
+    mileage: string;
+    description: string;
+    featured: boolean;
+    images: string[];
+    features?: string[];
+    ratings?: any[];
+    averageRating?: number;
+}
+
+async function getCar(id: string): Promise<Car | null> {
+    try {
+        const response = await fetch(`http://localhost:5001/api/cars/${id}`, {
+            next: { revalidate: 60 } // Revalidate every minute
+        });
+        if (!response.ok) return null;
+        return response.json();
+    } catch (error) {
+        console.error("Error fetching car:", error);
+        return null;
+    }
 }
 
 export default async function CarDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const car = cars.find((c) => c.id === id);
+    const car = await getCar(id);
 
     if (!car) {
         notFound();
@@ -43,10 +72,10 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
                     <div className="space-y-6">
                         <div className="relative h-[400px] md:h-[500px] rounded-2xl overflow-hidden glass-card image-overlay">
                             <Image
-                                src={car.images[0]}
-                                alt={car.name}
+                                src={getOptimizedImageUrl(car.images[0] || "", { width: 1200, height: 800 })}
+                                alt={`${car.brand} ${car.name}`}
                                 fill
-                                quality={100}
+                                quality={90}
                                 className="object-cover sharpen-image"
                                 priority
                             />
@@ -57,8 +86,8 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
                                 {car.images.map((img, idx) => (
                                     <div key={idx} className="relative h-24 rounded-lg overflow-hidden glass-card cursor-pointer hover:border-accent transition-all">
                                         <Image
-                                            src={img}
-                                            alt={`${car.name} thumb ${idx}`}
+                                            src={getOptimizedImageUrl(img, { width: 300, height: 200 })}
+                                            alt={`${car.brand} ${car.name} thumb ${idx}`}
                                             fill
                                             className="object-cover"
                                         />
@@ -66,6 +95,16 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
                                 ))}
                             </div>
                         )}
+
+                        {/* Rating Section - Moved inside gallery column */}
+                        <div className="mt-8">
+                            <CarRating
+                                carId={car._id}
+                                carName={`${car.brand} ${car.name}`}
+                                averageRating={car.averageRating}
+                                ratingsCount={car.ratings?.length || 0}
+                            />
+                        </div>
                     </div>
 
                     {/* Details Section */}
@@ -82,9 +121,17 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
                                 )}
                             </div>
                             <h1 className="text-4xl md:text-5xl font-extrabold text-secondary mb-2 tracking-tighter">
-                                {car.name}
+                                {car.brand} {car.name}
                             </h1>
-                            <p className="text-2xl text-accent font-bold">{car.price}</p>
+                            <div className="flex items-center gap-2 mb-2">
+                                <p className="text-2xl text-accent font-bold">{car.price}</p>
+                                {car.averageRating !== undefined && car.averageRating > 0 && (
+                                    <div className="flex items-center gap-1 bg-accent/10 px-2 py-1 rounded text-accent text-sm font-bold">
+                                        <Star fill="currentColor" size={14} />
+                                        {car.averageRating.toFixed(1)}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -120,14 +167,14 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
                         <div className="space-y-4 pt-6">
                             <h2 className="text-xl font-bold border-b border-white/10 pb-2">Key Features</h2>
                             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                {[
+                                {(car.features && car.features.length > 0 ? car.features : [
                                     "Power Steering",
                                     "Air Conditioning",
                                     "Bluetooth Connectivity",
                                     "Rear Camera",
                                     "Power Windows",
                                     "Alloy Wheels"
-                                ].map((feature) => (
+                                ]).map((feature) => (
                                     <li key={feature} className="flex items-center space-x-2 text-sm text-muted">
                                         <CheckCircle2 size={16} className="text-accent" />
                                         <span>{feature}</span>
@@ -136,21 +183,18 @@ export default async function CarDetailsPage({ params }: { params: Promise<{ id:
                             </ul>
                         </div>
 
-                        <div className="pt-8">
-                            <a
-                                href={`https://wa.me/250780000000?text=Hi, I am interested in the ${car.name} ${car.model} (${car.year}).`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full btn-primary flex items-center justify-center space-x-3 py-4 text-lg"
-                            >
-                                <MessageCircle size={24} />
-                                <span>Chat Seller on WhatsApp</span>
-                            </a>
-                            <p className="text-center text-xs text-muted mt-4 italic">
+                        <div className="pt-8 space-y-8">
+                            <TalkToUsForm
+                                carId={car._id}
+                                carName={`${car.brand} ${car.name}`}
+                            />
+                            <p className="text-center text-xs text-muted italic">
                                 Our team usually responds within 15 minutes during working hours.
                             </p>
                         </div>
                     </div>
+
+
                 </div>
             </div>
         </div>

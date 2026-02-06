@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import {
     Search,
@@ -102,10 +102,46 @@ const statusConfig = {
 };
 
 export default function CustomersPage() {
+    const [customers, setCustomers] = useState<Customer[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
 
-    const filteredCustomers = mockCustomers.filter((customer) => {
+    const fetchCustomers = async () => {
+        try {
+            const token = localStorage.getItem("adminToken");
+            const response = await fetch("http://localhost:5001/api/orders/customers", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                const mappedCustomers = data.map((c: any) => ({
+                    id: c._id.substring(c._id.length - 8).toUpperCase(),
+                    name: c.name,
+                    email: c.email,
+                    phone: c.phone,
+                    location: c.location,
+                    totalInquiries: c.totalInquiries || 0,
+                    lastContact: new Date(c.lastContact || c.updatedAt).toLocaleDateString(),
+                    status: (c.totalInquiries > 2 ? "active" : c.totalInquiries > 0 ? "potential" : "converted") as any,
+                    joinedDate: new Date(c.createdAt).toLocaleDateString(),
+                }));
+                setCustomers(mappedCustomers);
+            }
+        } catch (error) {
+            console.error("Error fetching customers:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchCustomers();
+    }, []);
+
+    const filteredCustomers = customers.filter((customer) => {
         const matchesSearch =
             customer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             customer.email.toLowerCase().includes(searchQuery.toLowerCase());
@@ -118,7 +154,7 @@ export default function CustomersPage() {
         <div className="min-h-screen bg-primary">
             <AdminHeader
                 title="Customer Management"
-                subtitle={`${mockCustomers.length} registered customers`}
+                subtitle={`${customers.length} registered customers`}
             />
 
             <main className="p-6 space-y-6">
@@ -129,7 +165,7 @@ export default function CustomersPage() {
                             <UserPlus size={24} className="text-blue-500" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-secondary">{mockCustomers.length}</p>
+                            <p className="text-2xl font-bold text-secondary">{customers.length}</p>
                             <p className="text-sm text-muted">Total Customers</p>
                         </div>
                     </div>
@@ -139,7 +175,7 @@ export default function CustomersPage() {
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-secondary">
-                                {mockCustomers.reduce((sum, c) => sum + c.totalInquiries, 0)}
+                                {customers.reduce((sum, c) => sum + c.totalInquiries, 0)}
                             </p>
                             <p className="text-sm text-muted">Total Inquiries</p>
                         </div>
@@ -150,7 +186,7 @@ export default function CustomersPage() {
                         </div>
                         <div>
                             <p className="text-2xl font-bold text-secondary">
-                                {mockCustomers.filter((c) => c.status === "converted").length}
+                                {customers.filter((c) => c.status === "converted").length}
                             </p>
                             <p className="text-sm text-muted">Converted</p>
                         </div>
@@ -176,8 +212,8 @@ export default function CustomersPage() {
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${statusFilter === status
-                                        ? "bg-accent text-primary"
-                                        : "text-muted hover:text-secondary"
+                                    ? "bg-accent text-primary"
+                                    : "text-muted hover:text-secondary"
                                     }`}
                             >
                                 {status.charAt(0).toUpperCase() + status.slice(1)}

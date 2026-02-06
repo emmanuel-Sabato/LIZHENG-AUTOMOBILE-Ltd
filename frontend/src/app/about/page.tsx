@@ -1,13 +1,30 @@
-import Image from "next/image";
-import aboutImg from "@/assets/IS (Prototype) Cockpit PROMINENCE.jpg";
-import { Target, Eye, Shield } from "lucide-react";
+"use client";
 
-export const metadata = {
-    title: "About Us | LIZHENG AUTOMOBILE Ltd",
-    description: "Learn more about Rwanda's premier car dealership.",
-};
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { Target, Eye, Shield, Loader2 } from "lucide-react";
 
 export default function AboutPage() {
+    const [aboutImage, setAboutImage] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch("http://localhost:5001/api/settings");
+                const data = await response.json();
+                if (data.aboutImage) {
+                    setAboutImage(data.aboutImage);
+                }
+            } catch (error) {
+                console.error("Error fetching about image:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSettings();
+    }, []);
     return (
         <div className="pt-32 pb-24 min-h-screen bg-primary">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -21,14 +38,19 @@ export default function AboutPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-24">
-                    <div className="relative h-[400px] lg:h-[600px] rounded-2xl overflow-hidden glass-card image-overlay">
-                        <Image
-                            src={aboutImg}
-                            alt="Our Story"
-                            fill
-                            quality={100}
-                            className="object-cover sharpen-image"
-                        />
+                    <div className="relative h-[400px] lg:h-[600px] rounded-2xl overflow-hidden glass-card image-overlay flex items-center justify-center bg-white/5">
+                        {loading ? (
+                            <Loader2 className="w-12 h-12 animate-spin text-accent" />
+                        ) : (
+                            <Image
+                                src={aboutImage || "https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&q=80&w=1920"}
+                                alt="Our Story"
+                                fill
+                                quality={100}
+                                unoptimized={true}
+                                className="object-cover sharpen-image"
+                            />
+                        )}
                     </div>
                     <div className="space-y-6">
                         <h2 className="text-3xl font-bold text-secondary">A Legacy of Excellence in Rwanda</h2>

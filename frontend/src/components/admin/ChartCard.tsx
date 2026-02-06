@@ -76,7 +76,7 @@ export const SimpleBarChart = ({ data, height = 200 }: SimpleBarChartProps) => {
     return (
         <div className="flex items-end justify-between gap-2" style={{ height }}>
             {data.map((item, index) => {
-                const barHeight = (item.value / maxValue) * 100;
+                const barHeight = Math.round((item.value / maxValue) * 100 * 100) / 100;
                 return (
                     <div key={index} className="flex-1 flex flex-col items-center gap-2">
                         {/* Bar */}
@@ -150,9 +150,9 @@ export const SimpleDonutChart = ({ data, size = 160, centerLabel, centerValue }:
         <div className="relative" style={{ width: size, height: size }}>
             <svg width={size} height={size}>
                 {data.map((item, index) => {
-                    const angle = (item.value / total) * 360;
+                    const angle = Math.round((item.value / total) * 360 * 100) / 100;
                     const arc = createArc(currentAngle, currentAngle + angle, item.color);
-                    currentAngle += angle;
+                    currentAngle = Math.round((currentAngle + angle) * 100) / 100;
                     return <g key={index}>{arc}</g>;
                 })}
             </svg>

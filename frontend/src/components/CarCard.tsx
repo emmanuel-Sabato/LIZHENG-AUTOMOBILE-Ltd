@@ -2,22 +2,39 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Car } from "@/data/cars";
 import { Calendar, Gauge, Fuel, MessageCircle } from "lucide-react";
+
+import { getOptimizedImageUrl } from "@/utils/cloudinary";
+
+interface Car {
+    _id: string;
+    name: string;
+    brand: string;
+    model: string;
+    year: number;
+    price: string;
+    transmission: string;
+    fuelType: string;
+    images: string[];
+}
 
 interface CarCardProps {
     car: Car;
 }
 
 const CarCard = ({ car }: CarCardProps) => {
+    const optimizedImage = getOptimizedImageUrl(car.images[0] || "", {
+        width: 800,
+        height: 600,
+    });
+
     return (
         <div className="glass-card group hover-scale">
-            <Link href={`/cars/${car.id}`} className="block relative h-64 overflow-hidden image-overlay">
+            <Link href={`/cars/${car._id}`} className="block relative h-64 overflow-hidden image-overlay">
                 <Image
-                    src={car.images[0]}
-                    alt={`${car.name} ${car.model}`}
+                    src={optimizedImage}
+                    alt={`${car.brand} ${car.name}`}
                     fill
-                    unoptimized={true}
                     className="object-cover transition-transform duration-500 group-hover:scale-110 sharpen-image"
                 />
                 <div className="absolute top-4 right-4 bg-accent text-primary font-bold px-3 py-1 rounded text-sm">
@@ -27,9 +44,9 @@ const CarCard = ({ car }: CarCardProps) => {
 
             <div className="p-6">
                 <div className="mb-4">
-                    <Link href={`/cars/${car.id}`}>
+                    <Link href={`/cars/${car._id}`}>
                         <h3 className="text-xl font-bold text-secondary group-hover:text-accent transition-colors">
-                            {car.name}
+                            {car.brand} {car.name}
                         </h3>
                     </Link>
                     <p className="text-muted text-sm">{car.model}</p>
@@ -55,19 +72,18 @@ const CarCard = ({ car }: CarCardProps) => {
 
                 <div className="flex space-x-2">
                     <Link
-                        href={`/cars/${car.id}`}
-                        className="flex-1 btn-outline py-2 text-sm"
+                        href={`/cars/${car._id}`}
+                        className="flex-1 btn-outline py-2 text-sm text-center"
                     >
                         Details
                     </Link>
-                    <a
-                        href={`https://wa.me/250780000000?text=Hi, I am interested in the ${car.name} ${car.model} (${car.year}) priced at ${car.price}.`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center bg-[#25D366] text-white px-4 py-2 rounded-md hover:opacity-90 transition-opacity"
+                    <Link
+                        href={`/cars/${car._id}#inquiry-form`}
+                        className="flex items-center justify-center bg-accent text-primary px-4 py-2 rounded-md hover:opacity-90 transition-opacity"
+                        title="Talk to Us"
                     >
                         <MessageCircle size={20} />
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>

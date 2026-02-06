@@ -46,17 +46,17 @@ const StatsCard = ({
     const [displayValue, setDisplayValue] = useState(0);
     const styles = colorStyles[color];
 
-    // Animate number counting
+    // Animate number counting only on client side
     useEffect(() => {
         const numericValue = typeof value === "string" ? parseFloat(value.replace(/[^0-9.-]/g, "")) : value;
         if (isNaN(numericValue)) {
-            setDisplayValue(0);
             return;
         }
 
         const duration = 1500;
         const steps = 60;
-        const increment = numericValue / steps;
+        const targetValue = numericValue;
+        const increment = targetValue / steps;
         let current = 0;
 
         const timer = setInterval(() => {
@@ -73,16 +73,19 @@ const StatsCard = ({
     }, [value]);
 
     const formatValue = () => {
+        // Use a fixed locale 'en-US' to avoid hydration mismatch across different environments
+        const localeString = displayValue.toLocaleString("en-US");
+
         if (typeof value === "string") {
             if (value.startsWith("$")) {
-                return `$${displayValue.toLocaleString()}`;
+                return `$${localeString}`;
             }
             if (value.endsWith("%")) {
                 return `${displayValue}%`;
             }
-            return displayValue.toLocaleString();
+            return localeString;
         }
-        return displayValue.toLocaleString();
+        return localeString;
     };
 
     const getTrendIcon = () => {

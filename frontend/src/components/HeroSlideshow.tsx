@@ -2,34 +2,26 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback, useRef } from "react";
-import Image, { StaticImageData } from "next/image";
-import { ChevronLeft, ChevronRight, Play, Pause, Sparkles } from "lucide-react";
-
-// Import images
-import img1 from "@/assets/1.jpg";
-import img2 from "@/assets/2.jpg";
-import img3 from "@/assets/3.jpg";
-import img4 from "@/assets/4.jpg";
-import img5 from "@/assets/5.jpg";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight, Play, Pause, Sparkles, Loader2 } from "lucide-react";
+import { getOptimizedImageUrl } from "@/utils/cloudinary";
 
 interface SlideData {
-    image: StaticImageData;
+    image: string;
     title: string;
     subtitle: string;
     tag: string;
 }
 
-const slides: SlideData[] = [
-    { image: img1, title: "Premium Selection", subtitle: "Handpicked luxury vehicles", tag: "NEW ARRIVAL" },
-    { image: img2, title: "Certified Quality", subtitle: "Rigorous inspection standards", tag: "FEATURED" },
-    { image: img3, title: "Best Prices", subtitle: "Competitive market rates", tag: "HOT DEAL" },
-    { image: img4, title: "Wide Variety", subtitle: "SUVs, Sedans & More", tag: "POPULAR" },
-    { image: img5, title: "Trusted Service", subtitle: "Customer satisfaction first", tag: "EXCLUSIVE" },
+const DEFAULT_SLIDES: SlideData[] = [
+    { image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1920", title: "Premium Selection", subtitle: "Handpicked luxury vehicles", tag: "NEW ARRIVAL" },
 ];
 
-const SLIDE_DURATION = 6000; // 6 seconds per slide
+const SLIDE_DURATION = 6000;
 
 const HeroSlideshow = () => {
+    const [slides, setSlides] = useState<SlideData[]>([]);
+    const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(true);
     const [progress, setProgress] = useState(0);
@@ -39,19 +31,50 @@ const HeroSlideshow = () => {
     const containerRef = useRef<HTMLDivElement>(null);
     const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const response = await fetch("http://localhost:5001/api/settings");
+                const data = await response.json();
+
+                if (data.slideshowImages && data.slideshowImages.length > 0) {
+                    const dynamicSlides = data.slideshowImages.map((img: string, i: number) => ({
+                        image: img,
+                        title: i === 0 ? "Premium Selection" : i === 1 ? "Certified Quality" : "Exclusive Offers",
+                        subtitle: i === 0 ? "Handpicked luxury vehicles" : "Rigorous inspection standards",
+                        tag: i === 0 ? "NEW ARRIVAL" : "FEATURED"
+                    }));
+                    setSlides(dynamicSlides);
+                } else {
+                    setSlides(DEFAULT_SLIDES);
+                }
+            } catch (error) {
+                console.error("Error fetching slideshow:", error);
+                setSlides(DEFAULT_SLIDES);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchSettings();
+    }, []);
+
     const goToSlide = useCallback((index: number, dir: 'next' | 'prev' = 'next') => {
+        if (!slides.length) return;
         setDirection(dir);
         setCurrentIndex(index);
         setProgress(0);
-    }, []);
+    }, [slides.length]);
 
     const nextSlide = useCallback(() => {
+        if (!slides.length) return;
         goToSlide((currentIndex + 1) % slides.length, 'next');
-    }, [currentIndex, goToSlide]);
+    }, [currentIndex, goToSlide, slides.length]);
 
     const prevSlide = useCallback(() => {
+        if (!slides.length) return;
         goToSlide((currentIndex - 1 + slides.length) % slides.length, 'prev');
-    }, [currentIndex, goToSlide]);
+    }, [currentIndex, goToSlide, slides.length]);
 
     // Auto-advance and progress bar
     useEffect(() => {
@@ -106,6 +129,14 @@ const HeroSlideshow = () => {
         setTouchStart(null);
     };
 
+    if (loading) {
+        return (
+            <div className="w-full aspect-[4/3] lg:aspect-square flex items-center justify-center bg-surface/80 backdrop-blur-xl rounded-[2rem] border-2 border-accent/20">
+                <Loader2 className="w-12 h-12 animate-spin text-accent" />
+            </div>
+        );
+    }
+
     return (
         <div
             ref={containerRef}
@@ -145,7 +176,7 @@ const HeroSlideshow = () => {
                                 {/* Image with Ken Burns Effect */}
                                 <div className="absolute inset-4 rounded-[1.5rem] overflow-hidden">
                                     <Image
-                                        src={slide.image}
+                                        src={getOptimizedImageUrl(slide.image, { width: 1920, height: 1080 })}
                                         alt={slide.title}
                                         fill
                                         className={`object-cover transition-transform ease-out ${isActive
@@ -155,7 +186,7 @@ const HeroSlideshow = () => {
                                         style={{
                                             animation: isActive ? 'kenBurns 6s ease-out forwards' : 'none'
                                         }}
-                                        quality={100}
+                                        quality={90}
                                         priority={index === 0}
                                     />
 

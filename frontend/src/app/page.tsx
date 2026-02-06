@@ -1,26 +1,69 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { cars } from "@/data/cars";
 import CarCard from "@/components/CarCard";
 import HeroSlideshow from "@/components/HeroSlideshow";
-import heroImg from "@/assets/Toyota-Rava4(1).jpg";
-import { CheckCircle, ShieldCheck, Zap, ArrowRight } from "lucide-react";
+import { CheckCircle, ShieldCheck, Zap, ArrowRight, Loader2 } from "lucide-react";
+
+interface Car {
+  _id: string;
+  name: string;
+  brand: string;
+  model: string;
+  year: number;
+  price: string;
+  transmission: string;
+  fuelType: string;
+  images: string[];
+}
 
 export default function Home() {
-  const featuredCars = cars.filter((car) => car.featured);
+  const [featuredCars, setFeaturedCars] = useState<Car[]>([]);
+  const [heroImage, setHeroImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [carsRes, settingsRes] = await Promise.all([
+          fetch("http://localhost:5001/api/cars?featured=true"),
+          fetch("http://localhost:5001/api/settings")
+        ]);
+
+        const carsData = await carsRes.json();
+        const settingsData = await settingsRes.json();
+
+        setFeaturedCars(carsData);
+        if (settingsData.heroImage) {
+          setHeroImage(settingsData.heroImage);
+        }
+      } catch (error) {
+        console.error("Error fetching homepage data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center pt-32 pb-20 overflow-hidden">
-        <Image
-          src={heroImg}
-          alt="LIZHENG AUTOMOBILE Hero"
-          fill
-          priority
-          quality={100}
-          className="object-cover scale-105 animate-subtle-zoom sharpen-image opacity-40 blur-sm"
-        />
+      <section className="relative min-h-screen flex items-center pt-32 pb-20 overflow-hidden bg-primary">
+        {!loading && (
+          <Image
+            src={heroImage || "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=1920"}
+            alt="LIZHENG AUTOMOBILE Hero"
+            fill
+            priority
+            unoptimized={true}
+            quality={100}
+            className="object-cover scale-105 animate-subtle-zoom sharpen-image opacity-40 blur-sm"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-transparent" />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -99,9 +142,21 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredCars.map((car) => (
-              <CarCard key={car.id} car={car} />
-            ))}
+            {loading ? (
+              <div className="col-span-full py-20 flex flex-col items-center justify-center text-muted">
+                <Loader2 className="w-10 h-10 animate-spin mb-4 text-accent" />
+                <p>Loading featured cars...</p>
+              </div>
+            ) : featuredCars.length > 0 ? (
+              featuredCars.map((car) => (
+                <CarCard key={car._id} car={car} />
+              ))
+            ) : (
+              <div className="col-span-full py-20 text-center border-2 border-dashed border-white/5 rounded-3xl">
+                <h4 className="text-xl font-bold text-secondary mb-2">No available car here</h4>
+                <p className="text-muted">Check back later for new arrivals.</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

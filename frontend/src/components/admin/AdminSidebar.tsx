@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 import {
     LayoutDashboard,
     Car,
@@ -33,6 +34,7 @@ const navItems: NavItem[] = [
 
 const AdminSidebar = () => {
     const pathname = usePathname();
+    const { user, logout } = useAuth();
     const [isCollapsed, setIsCollapsed] = useState(false);
 
     const isActive = (href: string) => {
@@ -79,8 +81,8 @@ const AdminSidebar = () => {
                         key={item.href}
                         href={item.href}
                         className={`group flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 relative ${isActive(item.href)
-                                ? "bg-accent/10 text-accent"
-                                : "text-muted hover:text-secondary hover:bg-white/5"
+                            ? "bg-accent/10 text-accent"
+                            : "text-muted hover:text-secondary hover:bg-white/5"
                             }`}
                     >
                         {/* Active Indicator */}
@@ -111,26 +113,27 @@ const AdminSidebar = () => {
                 {/* User Profile */}
                 <div className={`flex items-center gap-3 px-3 py-3 rounded-xl bg-white/5 mb-3 ${isCollapsed ? "justify-center" : ""}`}>
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent/80 to-accent/40 flex items-center justify-center text-primary font-bold text-sm">
-                        AD
+                        {user?.name?.substring(0, 2).toUpperCase() || "AD"}
                     </div>
                     {!isCollapsed && (
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-secondary truncate">Admin User</p>
-                            <p className="text-xs text-muted truncate">admin@lizheng.rw</p>
+                            <p className="text-sm font-semibold text-secondary truncate">{user?.name || "Admin User"}</p>
+                            <p className="text-xs text-muted truncate">{user?.email || "admin@lizheng.rw"}</p>
                         </div>
                     )}
                 </div>
 
                 {/* Logout Button */}
-                <Link
-                    href="/"
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-muted hover:text-red-400 hover:bg-red-500/10 transition-all ${isCollapsed ? "justify-center" : ""}`}
+                <button
+                    onClick={logout}
+                    className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted hover:text-red-400 hover:bg-red-500/10 transition-all ${isCollapsed ? "justify-center" : ""}`}
                 >
                     <LogOut size={20} />
-                    {!isCollapsed && <span className="font-medium text-sm">Exit Admin</span>}
-                </Link>
+                    {!isCollapsed && <span className="font-medium text-sm">Logout</span>}
+                </button>
             </div>
         </aside>
+
     );
 };
 

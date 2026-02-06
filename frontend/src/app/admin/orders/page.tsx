@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import {
     Search,
@@ -116,11 +116,70 @@ const sourceConfig = {
 };
 
 export default function OrdersPage() {
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
-    const filteredOrders = mockOrders.filter((order) => {
+    const fetchOrders = async () => {
+        try {
+            const token = localStorage.getItem("adminToken");
+            const response = await fetch("http://localhost:5001/api/orders", {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                // Map backend data to local Order interface
+                const mappedOrders = data.map((item: any) => ({
+                    id: item._id,
+                    customerName: item.customer.name,
+                    email: item.customer.email,
+                    phone: item.customer.phone,
+                    carInterested: `${item.car.brand} ${item.car.name}`,
+                    message: `Customer preferred to be contacted via ${item.customer.method} in ${item.customer.language}. Location: ${item.customer.location}`,
+                    status: item.status,
+                    date: new Date(item.createdAt).toLocaleString(),
+                    source: item.source || "website",
+                }));
+                setOrders(mappedOrders);
+            }
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    const handleUpdateStatus = async (id: string, newStatus: string) => {
+        try {
+            const token = localStorage.getItem("adminToken");
+            const response = await fetch(`http://localhost:5001/api/orders/${id}/status`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            if (response.ok) {
+                fetchOrders();
+                if (selectedOrder?.id === id) {
+                    setSelectedOrder(prev => prev ? { ...prev, status: newStatus as any } : null);
+                }
+            }
+        } catch (error) {
+            console.error("Error updating status:", error);
+        }
+    };
+
+    const filteredOrders = orders.filter((order) => {
         const matchesSearch =
             order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             order.carInterested.toLowerCase().includes(searchQuery.toLowerCase());
@@ -130,10 +189,10 @@ export default function OrdersPage() {
     });
 
     const orderCounts = {
-        all: mockOrders.length,
-        new: mockOrders.filter((o) => o.status === "new").length,
-        in_progress: mockOrders.filter((o) => o.status === "in_progress").length,
-        completed: mockOrders.filter((o) => o.status === "completed").length,
+        all: orders.length,
+        new: orders.filter((o) => o.status === "new").length,
+        in_progress: orders.filter((o) => o.status === "in_progress").length,
+        completed: orders.filter((o) => o.status === "completed").length,
     };
 
     return (
@@ -180,8 +239,8 @@ export default function OrdersPage() {
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-3 py-2 text-xs font-medium rounded-lg whitespace-nowrap transition-all ${statusFilter === status
-                                        ? "bg-accent text-primary"
-                                        : "text-muted hover:text-secondary"
+                                    ? "bg-accent text-primary"
+                                    : "text-muted hover:text-secondary"
                                     }`}
                             >
                                 {status === "all"
@@ -327,6 +386,24 @@ export default function OrdersPage() {
                             <div className="pt-4 border-t border-white/5">
                                 <p className="text-xs text-muted uppercase mb-2">Message</p>
                                 <p className="text-secondary">{selectedOrder.message}</p>
+                            </div>
+
+                            <div className="pt-4 border-t border-white/5">
+                                <p className="text-xs text-muted uppercase mb-3">Update Status</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {(['new', 'in_progress', 'completed', 'cancelled'] as const).map((s) => (
+                                        <button
+                                            key={s}
+                                            onClick={() => handleUpdateStatus(selectedOrder.id, s)}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${selectedOrder.status === s
+                                                    ? 'bg-accent text-primary border-accent'
+                                                    : 'bg-white/5 text-muted border-white/10 hover:border-white/20'
+                                                }`}
+                                        >
+                                            {s === 'in_progress' ? 'In Progress' : s.charAt(0).toUpperCase() + s.slice(1)}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
 
                             <div className="flex gap-3 pt-4">
