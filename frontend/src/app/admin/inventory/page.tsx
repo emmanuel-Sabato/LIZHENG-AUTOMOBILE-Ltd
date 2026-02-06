@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
+import API_BASE_URL from "@/config/api";
 import {
     Plus,
     Search,
@@ -84,7 +85,7 @@ export default function InventoryPage() {
 
     const fetchSettings = async () => {
         try {
-            const response = await fetch("http://localhost:5001/api/settings");
+            const response = await fetch(`${API_BASE_URL}/api/settings`);
             const data = await response.json();
             setSettings(data);
         } catch (error) {
@@ -97,7 +98,7 @@ export default function InventoryPage() {
     const fetchCars = async () => {
         setLoadingCars(true);
         try {
-            const response = await fetch("http://localhost:5001/api/cars");
+            const response = await fetch(`${API_BASE_URL}/api/cars`);
             const data = await response.json();
             setCars(data);
         } catch (error) {
@@ -161,8 +162,8 @@ export default function InventoryPage() {
 
         try {
             const url = isEditing
-                ? `http://localhost:5001/api/cars/${editingId}`
-                : "http://localhost:5001/api/cars";
+                ? `${API_BASE_URL}/api/cars/${editingId}`
+                : `${API_BASE_URL}/api/cars`;
 
             const method = isEditing ? "PUT" : "POST";
 
@@ -210,7 +211,7 @@ export default function InventoryPage() {
         if (!window.confirm("Are you sure you want to delete this car?")) return;
 
         try {
-            const response = await fetch(`http://localhost:5001/api/cars/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/cars/${id}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -235,7 +236,7 @@ export default function InventoryPage() {
         formData.append("image", file);
 
         try {
-            const response = await fetch("http://localhost:5001/api/settings/hero", {
+            const response = await fetch(`${API_BASE_URL}/api/settings/hero`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -257,7 +258,7 @@ export default function InventoryPage() {
         formData.append("image", file);
 
         try {
-            const response = await fetch("http://localhost:5001/api/settings/about", {
+            const response = await fetch(`${API_BASE_URL}/api/settings/about`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -279,7 +280,7 @@ export default function InventoryPage() {
         formData.append("image", file);
 
         try {
-            const response = await fetch("http://localhost:5001/api/settings/slideshow", {
+            const response = await fetch(`${API_BASE_URL}/api/settings/slideshow`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -295,7 +296,7 @@ export default function InventoryPage() {
 
     const handleDeleteSlideshowImage = async (imageUrl: string) => {
         try {
-            const response = await fetch("http://localhost:5001/api/settings/slideshow", {
+            const response = await fetch(`${API_BASE_URL}/api/settings/slideshow`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${token}`,

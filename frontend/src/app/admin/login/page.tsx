@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import API_BASE_URL from "@/config/api";
 import Image from "next/image";
 
 export default function LoginPage() {
@@ -22,7 +23,7 @@ export default function LoginPage() {
 
         try {
             // API call to backend
-            const response = await fetch("http://localhost:5001/api/admin/login", {
+            const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

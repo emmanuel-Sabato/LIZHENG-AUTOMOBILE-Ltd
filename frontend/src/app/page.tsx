@@ -6,6 +6,7 @@ import Link from "next/link";
 import CarCard from "@/components/CarCard";
 import HeroSlideshow from "@/components/HeroSlideshow";
 import { CheckCircle, ShieldCheck, Zap, ArrowRight, Loader2 } from "lucide-react";
+import API_BASE_URL from "@/config/api";
 
 interface Car {
   _id: string;
@@ -28,8 +29,8 @@ export default function Home() {
     const fetchData = async () => {
       try {
         const [carsRes, settingsRes] = await Promise.all([
-          fetch("http://localhost:5001/api/cars?featured=true"),
-          fetch("http://localhost:5001/api/settings")
+          fetch(`${API_BASE_URL}/api/cars?featured=true`),
+          fetch(`${API_BASE_URL}/api/settings`)
         ]);
 
         const carsData = await carsRes.json();

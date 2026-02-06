@@ -13,6 +13,7 @@ import {
     ExternalLink,
     MapPin,
 } from "lucide-react";
+import API_BASE_URL from "@/config/api";
 
 interface Customer {
     id: string;
@@ -110,7 +111,7 @@ export default function CustomersPage() {
     const fetchCustomers = async () => {
         try {
             const token = localStorage.getItem("adminToken");
-            const response = await fetch("http://localhost:5001/api/orders/customers", {
+            const response = await fetch(`${API_BASE_URL}/api/orders/customers`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

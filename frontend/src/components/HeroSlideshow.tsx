@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Play, Pause, Sparkles, Loader2 } from "lucide-react";
 import { getOptimizedImageUrl } from "@/utils/cloudinary";
+import API_BASE_URL from "@/config/api";
 
 interface SlideData {
     image: string;
@@ -34,7 +35,7 @@ const HeroSlideshow = () => {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/settings");
+                const response = await fetch(`${API_BASE_URL}/api/settings`);
                 const data = await response.json();
 
                 if (data.slideshowImages && data.slideshowImages.length > 0) {

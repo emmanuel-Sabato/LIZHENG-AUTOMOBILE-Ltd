@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Send, Phone, MessageSquare, Mail, Globe, MapPin, CheckCircle2 } from "lucide-react";
+import API_BASE_URL from "@/config/api";
 
 interface TalkToUsFormProps {
     carId: string;
@@ -29,7 +30,7 @@ export default function TalkToUsForm({ carId, carName }: TalkToUsFormProps) {
         setIsSubmitting(true);
 
         try {
-            const response = await fetch("http://localhost:5001/api/orders", {
+            const response = await fetch(`${API_BASE_URL}/api/orders`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

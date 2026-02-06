@@ -15,6 +15,7 @@ import {
 import { getOptimizedImageUrl } from "@/utils/cloudinary";
 import TalkToUsForm from "@/components/TalkToUsForm";
 import CarRating from "@/components/CarRating";
+import API_BASE_URL from "@/config/api";
 
 interface Car {
     _id: string;
@@ -36,7 +37,7 @@ interface Car {
 
 async function getCar(id: string): Promise<Car | null> {
     try {
-        const response = await fetch(`http://localhost:5001/api/cars/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/cars/${id}`, {
             next: { revalidate: 60 } // Revalidate every minute
         });
         if (!response.ok) return null;

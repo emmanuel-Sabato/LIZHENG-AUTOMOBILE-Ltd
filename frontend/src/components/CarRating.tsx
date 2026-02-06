@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Star, X } from "lucide-react";
+import API_BASE_URL from "@/config/api";
 
 interface CarRatingProps {
     carId: string;
@@ -46,7 +47,7 @@ export default function CarRating({ carId, carName, averageRating = 0, ratingsCo
 
         setIsSubmitting(true);
         try {
-            const response = await fetch(`http://localhost:5001/api/cars/${carId}/rate`, {
+            const response = await fetch(`${API_BASE_URL}/api/cars/${carId}/rate`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

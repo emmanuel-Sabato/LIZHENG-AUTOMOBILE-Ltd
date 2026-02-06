@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import CarCard from "@/components/CarCard";
 import { Search, SlidersHorizontal, Loader2, X } from "lucide-react";
+import API_BASE_URL from "@/config/api";
 import { CAR_BRANDS, CAR_CATEGORIES, FUEL_TYPES } from "@/constants/carConstants";
 
 interface Car {
@@ -30,7 +31,7 @@ export default function CarsPage() {
     useEffect(() => {
         const fetchCars = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/cars");
+                const response = await fetch(`${API_BASE_URL}/api/cars`);
                 const data = await response.json();
                 setCars(data);
             } catch (error) {

@@ -15,6 +15,7 @@ import {
     ExternalLink,
     MoreVertical,
 } from "lucide-react";
+import API_BASE_URL from "@/config/api";
 
 interface Order {
     id: string;
@@ -125,7 +126,7 @@ export default function OrdersPage() {
     const fetchOrders = async () => {
         try {
             const token = localStorage.getItem("adminToken");
-            const response = await fetch("http://localhost:5001/api/orders", {
+            const response = await fetch(`${API_BASE_URL}/api/orders`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -160,7 +161,7 @@ export default function OrdersPage() {
     const handleUpdateStatus = async (id: string, newStatus: string) => {
         try {
             const token = localStorage.getItem("adminToken");
-            const response = await fetch(`http://localhost:5001/api/orders/${id}/status`, {
+            const response = await fetch(`${API_BASE_URL}/api/orders/${id}/status`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -396,8 +397,8 @@ export default function OrdersPage() {
                                             key={s}
                                             onClick={() => handleUpdateStatus(selectedOrder.id, s)}
                                             className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${selectedOrder.status === s
-                                                    ? 'bg-accent text-primary border-accent'
-                                                    : 'bg-white/5 text-muted border-white/10 hover:border-white/20'
+                                                ? 'bg-accent text-primary border-accent'
+                                                : 'bg-white/5 text-muted border-white/10 hover:border-white/20'
                                                 }`}
                                         >
                                             {s === 'in_progress' ? 'In Progress' : s.charAt(0).toUpperCase() + s.slice(1)}

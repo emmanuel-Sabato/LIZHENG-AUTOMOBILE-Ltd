@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import API_BASE_URL from "@/config/api";
 import { Target, Eye, Shield, Loader2 } from "lucide-react";
 
 export default function AboutPage() {
@@ -11,7 +12,7 @@ export default function AboutPage() {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const response = await fetch("http://localhost:5001/api/settings");
+                const response = await fetch(`${API_BASE_URL}/api/settings`);
                 const data = await response.json();
                 if (data.aboutImage) {
                     setAboutImage(data.aboutImage);
