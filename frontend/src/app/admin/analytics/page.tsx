@@ -179,8 +179,8 @@ export default function AnalyticsPage() {
                             </button>
                         </div>
                         <div className="space-y-4">
-                            {topViewedCars.map((car) => (
-                                <div key={car._id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5">
+                            {topViewedCars.map((car: any) => (
+                                <div key={car.id} className="flex items-center gap-4 p-3 rounded-xl bg-white/5">
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${car.rank === 1 ? "bg-accent text-primary" :
                                         car.rank === 2 ? "bg-gray-400 text-primary" :
                                             car.rank === 3 ? "bg-amber-700 text-white" :
@@ -189,7 +189,7 @@ export default function AnalyticsPage() {
                                         #{car.rank}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-semibold text-secondary truncate">{car.brand} {car.name}</p>
+                                        <p className="font-semibold text-secondary truncate">{car.name}</p>
                                         <p className="text-xs text-muted">{car.model}</p>
                                     </div>
                                     <div className="text-right">

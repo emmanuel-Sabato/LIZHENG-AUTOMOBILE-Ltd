@@ -202,7 +202,7 @@ export default function AdminDashboard() {
                             </button>
                         </div>
                         <div className="space-y-4">
-                            {recentActivities.map((activity) => (
+                            {recentActivities.map((activity: any) => (
                                 <div
                                     key={activity.id}
                                     className="flex items-start gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
