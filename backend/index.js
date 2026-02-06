@@ -56,7 +56,16 @@ app.post('/api/admin/login', async (req, res) => {
             };
 
             // Generate real JWT token
-            const token = jwt.sign(user, process.env.JWT_SECRET, { expiresIn: '24h' });
+            const secret = process.env.JWT_SECRET;
+            if (!secret) {
+                console.error("CRITICAL ERROR: JWT_SECRET is not defined in environment variables");
+                return res.status(500).json({
+                    success: false,
+                    message: "Server configuration error. Please contact administrator."
+                });
+            }
+
+            const token = jwt.sign(user, secret, { expiresIn: '24h' });
 
             return res.json({
                 success: true,
