@@ -117,10 +117,12 @@ app.post('/api/admin/seed', async (req, res) => {
 const settingRoutes = require('./routes/settingRoutes');
 const carRoutes = require('./routes/carRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 app.use('/api/settings', settingRoutes);
 app.use('/api/cars', carRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

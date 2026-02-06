@@ -7,6 +7,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import SocialSidebar from "@/components/SocialSidebar";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +43,9 @@ export default function RootLayout({
         <main>{children}</main>
         {!isAdminRoute && <Footer />}
         {!isAdminRoute && <WhatsAppButton />}
+        <Analytics />
+        <SpeedInsights />
+        <AnalyticsTracker />
       </body>
     </html>
   );

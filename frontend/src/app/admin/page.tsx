@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AdminHeader from "@/components/admin/AdminHeader";
 import StatsCard from "@/components/admin/StatsCard";
 import ChartCard, { PeriodSelector, SimpleBarChart, SimpleDonutChart } from "@/components/admin/ChartCard";
@@ -14,19 +14,11 @@ import {
     MessageSquare,
     Clock,
     ArrowUpRight,
+    Loader2
 } from "lucide-react";
 import Image from "next/image";
-
-// Mock data for charts
-const revenueData = [
-    { label: "Jan", value: 45 },
-    { label: "Feb", value: 52 },
-    { label: "Mar", value: 38 },
-    { label: "Apr", value: 65 },
-    { label: "May", value: 48 },
-    { label: "Jun", value: 72 },
-    { label: "Jul", value: 58 },
-];
+import { useAuth } from "@/context/AuthContext";
+import API_BASE_URL from "@/config/api";
 
 const categoryData = [
     { label: "SUV", value: 40, color: "#D4AF37" },
@@ -35,18 +27,82 @@ const categoryData = [
     { label: "Electric", value: 15, color: "#8B5CF6" },
 ];
 
-const recentActivities = [
-    { id: 1, type: "inquiry", message: "New inquiry for Toyota Camry", time: "5 min ago" },
-    { id: 2, type: "view", message: "Lexus IS viewed 50 times today", time: "1 hour ago" },
-    { id: 3, type: "customer", message: "New customer: John Doe", time: "2 hours ago" },
-    { id: 4, type: "sale", message: "Toyota Highlander marked as sold", time: "5 hours ago" },
-];
-
-const topCars = cars.slice(0, 4);
-const carViews = [87, 62, 45, 38]; // Static view counts to avoid hydration mismatch
-
 export default function AdminDashboard() {
+    const { token } = useAuth();
     const [revenuePeriod, setRevenuePeriod] = useState("7d");
+    const [loading, setLoading] = useState(true);
+    const [dashboardData, setDashboardData] = useState<any>({
+        totalCars: 0,
+        totalOrders: 0,
+        totalCustomers: 0,
+        totalViews: 0,
+        recentActivities: [],
+        topCars: [],
+        revenueData: []
+    });
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                const headers = { 'Authorization': `Bearer ${token}` };
+
+                const [carsRes, ordersRes, customersRes, analyticsRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/cars`),
+                    fetch(`${API_BASE_URL}/api/orders`, { headers }),
+                    fetch(`${API_BASE_URL}/api/orders/customers`, { headers }),
+                    fetch(`${API_BASE_URL}/api/analytics/stats`, { headers })
+                ]);
+
+                const [carsData, ordersData, customersData, analyticsData] = await Promise.all([
+                    carsRes.json(),
+                    ordersRes.json(),
+                    customersRes.json(),
+                    analyticsRes.json()
+                ]);
+
+                // Map recent activities from orders
+                const activities = ordersData.slice(0, 4).map((order: any) => ({
+                    id: order._id,
+                    type: "inquiry",
+                    message: `New inquiry for ${order.car?.brand} ${order.car?.name}`,
+                    time: new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }));
+
+                setDashboardData({
+                    totalCars: carsData.length,
+                    totalOrders: ordersData.length,
+                    totalCustomers: customersData.length,
+                    totalViews: analyticsData.totalViews || 0,
+                    recentActivities: activities,
+                    topCars: carsData.slice(0, 4),
+                    revenueData: analyticsData.viewsPerDay?.map((day: any) => ({
+                        label: day._id.split('-').slice(2).join('/'),
+                        value: day.count
+                    })) || []
+                });
+            } catch (error) {
+                console.error("Error fetching dashboard data:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (token) {
+            fetchDashboardData();
+        }
+    }, [token]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-6">
+                <Loader2 className="w-12 h-12 animate-spin text-accent mb-4" />
+                <p className="text-secondary font-medium">Synchronizing your dashboard...</p>
+            </div>
+        );
+    }
+
+    const { totalCars, totalOrders, totalCustomers, totalViews, recentActivities, topCars, revenueData } = dashboardData;
+    const carViews = [87, 62, 45, 38]; // Still static for now as we don't have per-car stats yet
 
     return (
         <div className="min-h-screen bg-primary">
@@ -59,31 +115,31 @@ export default function AdminDashboard() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
                     <StatsCard
-                        title="Total Revenue"
-                        value="$285,400"
+                        title="Total Views"
+                        value={totalViews.toLocaleString()}
                         change={12.5}
-                        icon={<DollarSign size={24} />}
-                        color="gold"
-                    />
-                    <StatsCard
-                        title="Cars in Stock"
-                        value={cars.length.toString()}
-                        change={-2}
-                        icon={<Car size={24} />}
+                        icon={<Eye size={24} />}
                         color="blue"
                     />
                     <StatsCard
-                        title="Total Customers"
-                        value="1,248"
+                        title="Cars in Stock"
+                        value={totalCars.toString()}
+                        change={-2}
+                        icon={<Car size={24} />}
+                        color="gold"
+                    />
+                    <StatsCard
+                        title="Total Inquiries"
+                        value={totalOrders.toString()}
                         change={8.3}
-                        icon={<Users size={24} />}
+                        icon={<MessageSquare size={24} />}
                         color="green"
                     />
                     <StatsCard
-                        title="Conversion Rate"
-                        value="24%"
+                        title="Total Customers"
+                        value={totalCustomers.toString()}
                         change={3.2}
-                        icon={<TrendingUp size={24} />}
+                        icon={<Users size={24} />}
                         color="gold"
                     />
                 </div>
