@@ -9,6 +9,7 @@ import {
     Car,
     ClipboardList,
     Users,
+    Mail,
     BarChart3,
     Settings,
     LogOut,
@@ -28,6 +29,7 @@ const navItems: NavItem[] = [
     { label: "Inventory", href: "/admin/inventory", icon: <Car size={20} /> },
     { label: "Orders", href: "/admin/orders", icon: <ClipboardList size={20} /> },
     { label: "Customers", href: "/admin/customers", icon: <Users size={20} /> },
+    { label: "Messages", href: "/admin/messages", icon: <Mail size={20} /> },
     { label: "Analytics", href: "/admin/analytics", icon: <BarChart3 size={20} /> },
     { label: "Settings", href: "/admin/settings", icon: <Settings size={20} /> },
 ];
