@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import API_BASE_URL from "@/config/api";
 import {
     LayoutDashboard,
     Car,
@@ -36,8 +37,9 @@ const navItems: NavItem[] = [
 
 const AdminSidebar = () => {
     const pathname = usePathname();
-    const { user, logout } = useAuth();
+    const { user, token, logout } = useAuth();
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const isActive = (href: string) => {
         if (href === "/admin") {
@@ -45,6 +47,30 @@ const AdminSidebar = () => {
         }
         return pathname.startsWith(href);
     };
+
+    useEffect(() => {
+        const fetchUnreadCount = async () => {
+            if (!token) return;
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/messages/unread-count`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setUnreadCount(data.count);
+                }
+            } catch (error) {
+                console.error("Error fetching unread count:", error);
+            }
+        };
+
+        fetchUnreadCount();
+        // Refresh every minute
+        const interval = setInterval(fetchUnreadCount, 60000);
+        return () => clearInterval(interval);
+    }, [token]);
 
     return (
         <aside
@@ -99,7 +125,15 @@ const AdminSidebar = () => {
 
                         {/* Label */}
                         {!isCollapsed && (
-                            <span className="font-medium text-sm">{item.label}</span>
+                            <span className="font-medium text-sm flex-1">{item.label}</span>
+                        )}
+
+                        {/* Notification Badge for Messages */}
+                        {item.label === "Messages" && unreadCount > 0 && (
+                            <div className={`flex items-center justify-center bg-red-500 text-white rounded-full font-bold shadow-lg shadow-red-500/20 animate-pulse ${isCollapsed ? "absolute top-2 right-2 w-4 h-4 text-[8px]" : "w-5 h-5 text-[10px]"
+                                }`}>
+                                {unreadCount > 99 ? "99+" : unreadCount}
+                            </div>
                         )}
 
                         {/* Hover Glow */}

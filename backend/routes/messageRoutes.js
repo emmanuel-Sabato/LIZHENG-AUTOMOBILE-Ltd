@@ -39,6 +39,18 @@ router.post('/', async (req, res) => {
     }
 });
 
+// @desc    Get unread messages count
+// @route   GET /api/messages/unread-count
+// @access  Private/Admin
+router.get('/unread-count', protect, async (req, res) => {
+    try {
+        const count = await Message.countDocuments({ status: 'Unread' });
+        res.json({ count });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // @desc    Get all messages
 // @route   GET /api/messages
 // @access  Private/Admin
