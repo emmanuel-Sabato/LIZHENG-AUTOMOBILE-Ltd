@@ -28,7 +28,7 @@ interface Customer {
     lastContact: string;
     status: "Active" | "Potential" | "Converted";
     joinedDate: string;
-    _id: string; // Original ID for API calls
+    _id: string; // Required ID for API consistency
 }
 
 const mockCustomers: Customer[] = [
@@ -40,8 +40,9 @@ const mockCustomers: Customer[] = [
         location: "Kigali, Rwanda",
         totalInquiries: 5,
         lastContact: "2024-02-05",
-        status: "active",
+        status: "Active",
         joinedDate: "2024-01-15",
+        _id: "mock-1"
     },
     {
         id: "CUS-002",
@@ -51,8 +52,9 @@ const mockCustomers: Customer[] = [
         location: "Kigali, Rwanda",
         totalInquiries: 3,
         lastContact: "2024-02-04",
-        status: "converted",
+        status: "Converted",
         joinedDate: "2023-12-20",
+        _id: "mock-2"
     },
     {
         id: "CUS-003",
@@ -62,8 +64,9 @@ const mockCustomers: Customer[] = [
         location: "Musanze, Rwanda",
         totalInquiries: 2,
         lastContact: "2024-02-03",
-        status: "potential",
+        status: "Potential",
         joinedDate: "2024-01-25",
+        _id: "mock-3"
     },
     {
         id: "CUS-004",
@@ -73,8 +76,9 @@ const mockCustomers: Customer[] = [
         location: "Kigali, Rwanda",
         totalInquiries: 8,
         lastContact: "2024-02-05",
-        status: "active",
+        status: "Active",
         joinedDate: "2023-11-10",
+        _id: "mock-4"
     },
     {
         id: "CUS-005",
@@ -84,8 +88,9 @@ const mockCustomers: Customer[] = [
         location: "Rubavu, Rwanda",
         totalInquiries: 1,
         lastContact: "2024-02-01",
-        status: "potential",
+        status: "Potential",
         joinedDate: "2024-02-01",
+        _id: "mock-5"
     },
     {
         id: "CUS-006",
@@ -95,8 +100,9 @@ const mockCustomers: Customer[] = [
         location: "Huye, Rwanda",
         totalInquiries: 4,
         lastContact: "2024-01-28",
-        status: "converted",
+        status: "Converted",
         joinedDate: "2023-10-05",
+        _id: "mock-6"
     },
 ];
 

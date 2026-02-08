@@ -22,6 +22,15 @@ import API_BASE_URL from "@/config/api";
 
 // Category data will be calculated dynamically from the fetched cars
 
+interface Car {
+    _id: string;
+    name: string;
+    model: string;
+    price: string;
+    views?: number;
+    images: string[];
+}
+
 export default function AdminDashboard() {
     const { token } = useAuth();
     const [revenuePeriod, setRevenuePeriod] = useState("7d");
@@ -254,7 +263,7 @@ export default function AdminDashboard() {
                             </button>
                         </div>
                         <div className="space-y-4">
-                            {topCars.map((car, idx) => (
+                            {topCars.map((car: Car, idx: number) => (
                                 <div
                                     key={car._id}
                                     className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
