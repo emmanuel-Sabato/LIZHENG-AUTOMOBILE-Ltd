@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import AdminHeader from "@/components/admin/AdminHeader";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
@@ -18,6 +19,7 @@ import {
     X,
     Upload,
     Image as ImageIcon,
+    Loader2
 } from "lucide-react";
 import { CAR_BRANDS, CAR_CATEGORIES, FUEL_TYPES, TRANSMISSIONS, STATUSES } from "@/constants/carConstants";
 
@@ -46,8 +48,9 @@ interface SiteSettings {
     slideshowImages: string[];
 }
 
-export default function InventoryPage() {
+function InventoryContent() {
     const { token } = useAuth();
+    const searchParams = useSearchParams();
     const [cars, setCars] = useState<Car[]>([]);
     const [loadingCars, setLoadingCars] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
@@ -81,7 +84,12 @@ export default function InventoryPage() {
     useEffect(() => {
         fetchSettings();
         fetchCars();
-    }, []);
+
+        // Handle auto-opening add modal from quick actions
+        if (searchParams.get("add") === "true") {
+            setShowAddModal(true);
+        }
+    }, [searchParams]);
 
     const fetchSettings = async () => {
         try {
@@ -943,5 +951,18 @@ export default function InventoryPage() {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function InventoryPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-primary flex flex-col items-center justify-center p-6">
+                <Loader2 className="w-12 h-12 animate-spin text-accent mb-4" />
+                <p className="text-secondary font-medium">Loading inventory...</p>
+            </div>
+        }>
+            <InventoryContent />
+        </Suspense>
     );
 }

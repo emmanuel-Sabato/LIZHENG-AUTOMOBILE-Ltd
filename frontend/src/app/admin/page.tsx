@@ -16,6 +16,7 @@ import {
     ArrowUpRight,
     Loader2
 } from "lucide-react";
+import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
 import API_BASE_URL from "@/config/api";
@@ -309,22 +310,22 @@ export default function AdminDashboard() {
                 <div className="glass-card p-6">
                     <h3 className="text-lg font-semibold text-secondary mb-4">Quick Actions</h3>
                     <div className="flex flex-wrap gap-3">
-                        <button className="btn-primary flex items-center gap-2">
+                        <Link href="/admin/inventory?add=true" className="btn-primary flex items-center gap-2">
                             <Car size={18} />
                             Add New Car
-                        </button>
-                        <button className="btn-outline flex items-center gap-2">
+                        </Link>
+                        <Link href="/admin/messages" className="btn-outline flex items-center gap-2">
                             <MessageSquare size={18} />
                             View Inquiries
-                        </button>
-                        <button className="btn-outline flex items-center gap-2">
+                        </Link>
+                        <Link href="/admin/customers" className="btn-outline flex items-center gap-2">
                             <Users size={18} />
                             Manage Customers
-                        </button>
-                        <button className="btn-outline flex items-center gap-2">
+                        </Link>
+                        <Link href="/admin/analytics" className="btn-outline flex items-center gap-2">
                             <TrendingUp size={18} />
                             View Analytics
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </main>
